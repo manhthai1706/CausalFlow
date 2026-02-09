@@ -8,7 +8,7 @@ import numpy as np
 import torch
 import torch.optim as optim
 from torch.utils.data import TensorDataset, DataLoader
-from CausalFlow import CausalFlow
+from causalflow.models.causalflow import CausalFlow
 
 
 class CausalFlowTrainer:

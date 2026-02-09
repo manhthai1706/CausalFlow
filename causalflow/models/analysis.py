@@ -8,8 +8,8 @@ import matplotlib.pyplot as plt
 from sklearn import metrics
 from sklearn.cluster import KMeans
 
-from CausalFlow import CausalFlow
-from HSIC import hsic_gam
+from causalflow.models.causalflow import CausalFlow
+from causalflow.core.hsic import hsic_gam
 
 def draw_clu(data, label, name):
     ## draw the whole data set

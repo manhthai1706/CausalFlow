@@ -27,7 +27,7 @@ class CausalFlow(nn.Module):
         self.d = x_dim + y_dim
         
         # Import here to avoid circular dependency
-        from GPPOM_HSIC import GPPOMC_lnhsic_Core
+        from causalflow.core.gppom_hsic import GPPOMC_lnhsic_Core
         
         # Core model architecture (Now multivariate aware)
         self.core = GPPOMC_lnhsic_Core(x_dim, y_dim, n_clusters, hidden_dim, lda, self.device)
@@ -40,7 +40,7 @@ class CausalFlow(nn.Module):
         """
         Train the model. Supports both bivariate (X, Y) and multivariate (X) data.
         """
-        from train import CausalFlowTrainer
+        from causalflow.models.trainer import CausalFlowTrainer
         
         # Combine if bivariate
         if Y is not None:

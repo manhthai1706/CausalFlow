@@ -5,7 +5,7 @@ Tests all 17 known causal edges
 import numpy as np
 import torch
 from sklearn.preprocessing import StandardScaler
-from ANMMM import ANMMM_cd_advanced
+from causalflow import ANMMM_cd_advanced
 
 def test_all_sachs_edges():
     print("=" * 70)
@@ -13,9 +13,9 @@ def test_all_sachs_edges():
     print("=" * 70)
     
     # Load data
-    data = np.load('sachs/continuous/data1.npy')
-    headers = np.load('sachs/sachs-header.npy')
-    dag = np.load('sachs/continuous/DAG1.npy')
+    data = np.load('data/sachs/continuous/data1.npy')
+    headers = np.load('data/sachs/sachs-header.npy')
+    dag = np.load('data/sachs/continuous/DAG1.npy')
     
     # Extract all true causal edges from DAG
     true_edges = []

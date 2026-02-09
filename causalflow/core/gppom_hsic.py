@@ -8,8 +8,9 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
-from kernels import RBFKernel
-import MLP
+import torch.optim as optim
+from causalflow.core.kernels import RBFKernel
+from causalflow.core import mlp
 
 class RFFGPLayer(nn.Module):
     """Random Fourier Features for Sparse GP Approximation (O(N) complexity)"""
@@ -68,7 +69,7 @@ class GPPOMC_lnhsic_Core(nn.Module):
         # Structural Matrix for DAG Learning (NOTEARS)
         self.W_dag = nn.Parameter(torch.zeros(self.d, self.d))
         
-        self.MLP = MLP.MLP(input_dim=self.d, hidden_dim=hidden_dim, 
+        self.MLP = mlp.MLP(input_dim=self.d, hidden_dim=hidden_dim, 
                           output_dim=self.d, n_clusters=n_clusters, device=device)
         
         self.gp_phi_z = RFFGPLayer(n_clusters, n_features=128)
