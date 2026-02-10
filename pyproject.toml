@@ -20,6 +20,11 @@ dependencies = [
     "scipy>=1.7.0"
 ]
 
+[project.urls]
+"Homepage" = "https://github.com/manhthai1706/CausalFlow"
+"Documentation" = "https://github.com/manhthai1706/CausalFlow/blob/main/ARCHITECTURE.md"
+"Bug Tracker" = "https://github.com/manhthai1706/CausalFlow/issues"
+
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["causalflow*"]
