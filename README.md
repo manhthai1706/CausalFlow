@@ -1,6 +1,6 @@
 # CausalFlow: My Advanced Causal Discovery Framework
 
-[![Architecture](https://img.shields.io/badge/Architecture-Detailed_Diagrams-blueviolet?style=flat-square)](ARCHITECTURE.md)
+[![Architecture](https://img.shields.io/badge/Architecture-Detailed_Diagrams-blueviolet?style=flat-square)](ARCH.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
 CausalFlow là dự án cá nhân của tôi tập trung vào việc nghiên cứu và triển khai các thuật toán khám phá nhân quả (Causal Discovery) tiên tiến. Mục tiêu của dự án là xây dựng một framework mạnh mẽ, tích hợp học sâu để giải quyết bài toán tìm kiếm cấu trúc nhân quả trong các hệ thống đa biến phức tạp.

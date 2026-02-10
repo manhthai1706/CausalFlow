@@ -1,4 +1,4 @@
-# CausalFlow: Detailed File-by-File Architecture
+# CausalFlow Architecture
 
 Tài liệu này cung cấp sơ đồ hoạt động chi tiết cho từng thành phần trong mã nguồn của framework CausalFlow.
 

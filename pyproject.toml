@@ -22,7 +22,7 @@ dependencies = [
 
 [project.urls]
 "Homepage" = "https://github.com/manhthai1706/CausalFlow"
-"Documentation" = "https://github.com/manhthai1706/CausalFlow/blob/main/ARCHITECTURE.md"
+"Documentation" = "https://github.com/manhthai1706/CausalFlow/blob/main/ARCH.md"
 "Bug Tracker" = "https://github.com/manhthai1706/CausalFlow/issues"
 
 [tool.setuptools.packages.find]
