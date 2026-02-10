@@ -1,105 +1,147 @@
-# CausalFlow Technical Specification & Architecture
+# CausalFlow: Detailed File-by-File Architecture
 
-Tài liệu này cung cấp cái nhìn chuyên sâu về kiến trúc nội bộ, các thành phần toán học và quy trình xử lý của framework **CausalFlow**.
+Tài liệu này cung cấp sơ đồ hoạt động chi tiết cho từng thành phần trong mã nguồn của framework CausalFlow.
 
 ---
 
-## 1. Cấu trúc Mô hình Phân lớp (Layered Architecture)
+## 📂 Thư mục `causalflow/core/` (Nền tảng thuật toán)
 
-CausalFlow được thiết kế theo cấu trục phân lớp để tách biệt giữa việc trích xuất đặc trưng, mô hình hóa nhiễu và tối ưu hóa cấu trúc đồ thị.
+### 1. `mlp.py` - Ultimate Deep Learning Backbone
+Đây là tệp phức tạp nhất, chịu trách nhiệm trích xuất thực thể và mô hình hóa nhiễu.
 
 ```mermaid
 graph TD
-    subgraph Input_Layer [Mô đun Tiền xử lý]
-        I[Raw Data] --> QT[Quantile Transformer: Gaussianizing]
-        QT --> IF[Isolation Forest: Outlier Filtration]
+    IN[Input X] --> ATT[Attention Layer: Feature Selection]
+    ATT --> GRN[Gated Residual Network: GRN]
+    GRN --> RB[ResBlocks: Residual Learning]
+    
+    subgraph Multi-Head_Outputs
+        RB --> VAE[VAE Head: mu, log_var for Mechanism Z]
+        RB --> NSF[Monotonic Spline: Noise Transformation h_y]
+        RB --> REG[Regressor: Probabilistic Output mu_y, var_y]
     end
-
-    subgraph Feature_Extraction [Core Backbone - MLP Module]
-        IF --> ATT[Self-Attention: Feature Weighting]
-        ATT --> RB[ResNet Blocks: Deep Processing]
-        RB --> GRN[Gated Residual Networks: Input Gating]
-    end
-
-    subgraph Causal_Discovery [Causal Engine - GPPOM Module]
-        GRN --> VAE[VAE Head: Latent Mechanism Z]
-        GRN --> NSF[Neural Spline Flows: Noise H]
-        GRN --> NT[NOTEARS: Adjacency Matrix W]
-    end
-
-    subgraph Inference_Layer [Statistical Testing]
-        NSF & VAE --> GP[Gaussian Process Head: Prediction]
-        GP --> RES[Residual Extraction]
-        RES --> HSIC[HSIC: Independence Validation]
-    end
-
-    HSIC --> OUT[Bail: Causal Direction / DAG]
+    
+    VAE --> Z[Softmax Z clusters]
+    NSF --> HY[Y Transformation]
 ```
 
----
-
-## 2. Chi tiết các thành phần SOTA (State-of-the-Art Components)
-
-### 2.1. Neural Spline Flows (Mô hình hóa Nhiễu)
-Thay vì giả định nhiễu là dạng Gaussian đơn giản, dự án sử dụng **Monotonic Spline Layers**.
-*   **Cơ chế:** Sử dụng các hàm Spline đơn điệu bậc ba để thực hiện phép biến đổi $h(Y)$.
-*   **Ưu điểm:** Cho phép mô hình hóa các phân phối nhiễu cực kỳ phức tạp (Multi-modal, Heavy-tailed) mà vẫn đảm bảo tính khả nghịch (invertibility) để trích xuất sạch nhiễu.
-
-### 2.2. Differentiable DAG Learning (NOTEARS)
-Sử dụng phương pháp tối ưu hóa liên tục trên ma trận trọng số $W$.
-*   **Hàm ràng buộc:** $h(W) = Tr(e^{W \circ W}) - d = 0$.
-*   **Mục tiêu:** Ép ma trận kề phải là đồ thị không vòng (Directed Acyclic Graph) thông qua Gradient Descent, giúp tránh việc phải tìm kiếm tổ hợp (combinatorial search) tốn kém.
-
-### 2.3. Fast HSIC via Random Fourier Features (RFF)
-Để tăng tốc phép thử độc lập thống kê từ $O(N^2)$ xuống $O(N)$:
-*   **Cơ chế:** Ánh xạ dữ liệu vào không gian đặc trưng RKHS sử dụng các hàm Sine/Cosine ngẫu nhiên.
-*   **Ứng dụng:** Tính toán sự độc lập giữa phần dư và nguyên nhân trong thời gian thực ngay khi huấn luyện.
-
----
-
-## 3. Quy trình thực thi các Module (File-level Flow)
-
-### 📂 `causalflow/core/`
-*   **`mlp.py`**: Chứa lớp `MLP` đa đầu ra. Nó không chỉ dự báo giá trị mà còn trích xuất tham số của phân phối tiềm ẩn và thực hiện phép biến đổi PNL (Post-Nonlinear).
-*   **`gppom_hsic.py`**: Quản lý `GPPOMC_lnhsic_Core`. Đây là nơi "hợp nhất" kết quả từ MLP với ràng buộc DAG NOTEARS. Nó tính toán mất mát tổng hợp để điều phối toàn bộ các thành phần khác.
-*   **`kernels.py`**: Định nghĩa các Kernel đạo hàm. Khả năng tự học (Adaptive) của mô hình nằm ở việc tối ưu hóa `log_gamma` (băng thông) và `log_alpha` (biên độ) của các nhân này.
-
-### 📂 `causalflow/models/`
-*   **`analysis.py`**: Triển khai `ANMMM_cd_advanced`.
-    1.  Khởi tạo 2 thực thể `CausalFlow`.
-    2.  Khóa cứng cấu trúc: `W_dag[i,j]=1` cho hướng thuận và `W_dag[j,i]=1` cho hướng nghịch.
-    3.  Đo đạc độ độc lập của phần dư để đưa ra kết luận cuối cùng.
-*   **`trainer.py`**: Sử dụng bộ tối ưu **AdamW** với Weight Decay để tránh Overfitting, quản lý việc giảm nhiệt độ (temperature) cho lớp Gumbel-Softmax.
-
----
-
-## 4. Đặc tả luồng dữ liệu (Data Flow Analysis)
+### 2. `gppom_hsic.py` - Core Engine & DAG Learning
+Điều phối việc học đồ thị nhân quả và kết hợp các hàm mất mát.
 
 ```mermaid
-sequenceDiagram
-    participant D as Data
-    participant B as Backbone (ResNet+Attention)
-    participant L as Latent (VAE/NSF)
-    participant G as GP Head
-    participant H as HSIC Test
+graph TD
+    B[Batch Data] --> MLP[Call: mlp.py for Latents]
+    MLP --> Z[Mechanism Z]
+    
+    subgraph DAG_Optimization
+        W[W_dag Matrix] --> PEN[Acyclicity Penalty: h_W]
+        W --> MASK[Structural Masking]
+    end
+    
+    subgraph Prediction_Flow
+        B & MASK --> GP[Random Fourier Features GP]
+        GP --> PRED[Y Prediction]
+    end
+    
+    PRED --> MSE[Loss: Regression]
+    Z & B --> HSIC1[Loss: FastHSIC Clustering]
+    PRED & B --> HSIC2[Loss: Adaptive HSIC PNL]
+    
+    MSE & PEN & HSIC1 & HSIC2 --> TOTAL[Total Loss & Backward]
+```
 
-    D->>B: Input Tensor [Batch, Dim]
-    B->>L: Latent Representation
-    L->>G: Probabilistic Mapping with DAG Bias
-    G->>H: Estimated Residuals
-    H->>H: Statistical Independence Check
-    H-->>D: Gradient Feedback
+### 3. `hsic.py` - Statistical Independence Testing
+Triển khai các phép thử thống kê để xác nhận quan hệ nhân quả.
+
+```mermaid
+graph LR
+    subgraph hsic_gam
+        A[Data X, Y] --> K[Compute Kernels K, L]
+        K --> H[Trace Calculation]
+        H --> GAM[Gamma Approximation]
+        GAM --> P[p-value / Stat]
+    end
+    
+    subgraph hsic_perm
+        A1[Data] --> K1[Kernels]
+        K1 --> SHUFFLE[Permutation/Shuffle]
+        SHUFFLE --> DIST[Null Distribution]
+    end
+```
+
+### 4. `kernels.py` - Differentiable Kernel Library
+Sơ đồ phân cấp các hàm nhân có thể đạo hàm.
+
+```mermaid
+graph TD
+    K[Base Kernel] --> RBF[RBF / Gaussian]
+    K --> MAT[Matern 3/2 & 5/2]
+    K --> RQ[Rational Quadratic]
+    K --> LIN[Linear / Poly]
+    
+    subgraph Optimization
+        PARAM[log_alpha, log_gamma] --> GRAD[Learnable via SGD]
+    end
 ```
 
 ---
 
-## 5. Hàm mục tiêu tối ưu hóa (Comprehensive Objective)
+## 📂 Thư mục `causalflow/models/` (Giao diện & Ứng dụng)
 
-Mô hình tối ưu hóa hàm toán học cực kỳ chặt chẽ:
+### 5. `causalflow.py` - Sklearn-style Wrapper
+Giao diện chính cho người dùng cuối.
 
-$${\cal L}_{total} = {\cal L}_{MSE} + \lambda_{dag} h(W) + \lambda_{hsic} \log(HSIC(X, \hat{\epsilon})) + \lambda_{kl} D_{KL}(q(z)||p(z))$$
+```mermaid
+graph TD
+    START[CausalFlow Object] --> INIT[Init Dimensions & Device]
+    INIT --> FIT[Method: fit]
+    
+    subgraph FIT_Logic
+        FIT --> BIV[Check: Bivariate X, Y?]
+        FIT --> MULTI[Check: Multivariate X?]
+        BIV & MULTI --> TRAIN[Create: CausalFlowTrainer]
+    end
+    
+    TRAIN --> RESULT[Update History & Weights]
+    RESULT --> DAG[Method: get_dag_matrix]
+```
 
-*   **MSE:** Đảm bảo khả năng giải thích dữ liệu.
-*   **h(W):** Đảm bảo tính hợp lệ của đồ thị nhân quả.
-*   **log(HSIC):** Đảm bảo tính đúng đắn của giả thuyết "Nguyên nhân độc lập với Nhiễu".
-*   **KL:** Đảm bảo cấu trúc tiềm ẩn của cơ chế nhân quả không bị sụp đổ.
+### 6. `trainer.py` - Training Orchestrator
+Quản lý vòng lặp huấn luyện và lịch trình (scheduling).
+
+```mermaid
+graph TD
+    LOOP[For Epoch in Epochs] --> TEMP[Adjust Temperature: Gumbel-Softmax]
+    TEMP --> BATCH[For Batch in DataLoader]
+    
+    subgraph Batch_Processing
+        BATCH --> ZERO[optimizer.zero_grad]
+        ZERO --> FORWARD[model.forward]
+        FORWARD --> BACK[loss.backward]
+        BACK --> STEP[optimizer.step]
+    end
+    
+    STEP --> LOG[Logging: Loss & HSIC Trend]
+```
+
+### 7. `analysis.py` - Causal Direction Discovery
+Lô-gic phân tích nhân quả nâng cao (SOTA 70.6%).
+
+```mermaid
+graph TD
+    DATA[Raw Data Pair] --> PRE[Standardize / Quantile Transform]
+    PRE --> CLEAN[Isolation Forest: Remove Outliers]
+    
+    subgraph Hypothesis_Testing
+        CLEAN --> H1[Test Hypothesis: X -> Y]
+        H1 --> LOCK1[Lock W_dag: Force Direction]
+        LOCK1 --> SCORE1[Compute HSIC Stability Score 1]
+        
+        CLEAN --> H2[Test Hypothesis: Y -> X]
+        H2 --> LOCK2[Lock W_dag: Force Direction]
+        LOCK2 --> SCORE2[Compute HSIC Stability Score 2]
+    end
+    
+    SCORE1 & SCORE2 --> COMP[Compare Scores]
+    COMP --> DECIDE[Final Decision: Min Score Wins]
+```
