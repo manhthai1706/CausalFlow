@@ -1,71 +1,77 @@
-# CausalFlow: My Advanced Causal Discovery Framework
+# CausalFlow: Advanced Causal Discovery Framework
 
 [![Architecture](https://img.shields.io/badge/Architecture-Detailed_Diagrams-blueviolet?style=flat-square)](ARCH.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
-CausalFlow là dự án cá nhân của tôi tập trung vào việc nghiên cứu và triển khai các thuật toán khám phá nhân quả (Causal Discovery) tiên tiến. Mục tiêu của dự án là xây dựng một framework mạnh mẽ, tích hợp học sâu để giải quyết bài toán tìm kiếm cấu trúc nhân quả trong các hệ thống đa biến phức tạp.
+CausalFlow là một framework khám phá nhân quả (Causal Discovery) tiên tiến, kết hợp giữa học sâu (Deep Learning) và các lý thuyết thống kê hiện đại. Hệ thống được thiết kế để tự động nhận diện cấu trúc đồ thị nhân quả (DAG) từ dữ liệu quan sát phi tuyến và đa biến.
 
-Dựa trên nền tảng nghiên cứu GPPOM-HSIC, tôi đã nâng cấp và tối ưu hóa hệ thống này để đạt được hiệu suất cao hơn trong việc xử lý dữ liệu phi tuyến và nhiễu thực tế.
+Dựa trên nền tảng của phương pháp GPPOM-HSIC, CausalFlow tích hợp các công nghệ SOTA để tối ưu hóa khả năng mô hình hóa nhiễu và tìm kiếm cấu trúc đồ thị liên tục.
 
-## Những cải tiến tôi đã triển khai (Personal Contributions)
+## 🚀 Cải tiến so với GPPOM-HSIC (base)
 
-Trong phiên bản này, tôi đã tập trung thực hiện các nâng cấp kỹ thuật quan trọng:
+Mô hình CausalFlow mang đến những nâng cấp kỹ thuật quan trọng so với phiên bản GPPOM-HSIC nguyên bản của `amber0309`:
 
-- **Neural Spline Flows (NSF):** Tôi tích hợp NSF để thay thế các mô hình nhiễu đơn giản, giúp framework mô hình hóa được các phân phối nhiễu phức tạp bằng các hàm Spline đơn điệu bậc ba.
-- **NOTEARS Differentiable DAG:** Áp dụng phương pháp tối ưu hóa đồ thị liên tục để tìm kiếm cấu trúc DAG đa biến, cho phép mô hình học trực tiếp bằng Gradient Descent.
-- **Fixed-Structure Bivariate Testing:** Để cải thiện độ chính xác hướng nhân quả, tôi đã triển khai cơ chế khóa hướng (Fixed-structure fit) kết hợp với phép thử HSIC, giúp triệt tiêu nhiễu từ các biến ẩn.
-- **Advanced Preprocessing Pipeline:** Tôi xây dựng luồng xử lý dữ liệu chuyên sâu sử dụng `QuantileTransformer` để chuẩn hóa phân phối và `IsolationForest` để lọc nhiễu sinh học.
+| Tính năng | GPPOM-HSIC (Base) | **CausalFlow (Enhanced)** |
+| :--- | :--- | :--- |
+| **Mô hình hóa Nhiễu** | Phân phối đơn giản / Gaussian | **Neural Spline Flows (NSF)**: Mô hình hóa nhiễu phi tuyến phức tạp bằng Spline Flows. |
+| **Học cấu trúc DAG** | Hạn chế ở bài toán song biến | **NOTEARS Integration**: Tối ưu hóa ma trận kề DAG liên tục cho hệ thống đa biến. |
+| **Phân tích Hướng** | Tối ưu hóa tự do (dễ lệch) | **Fixed-Structure Bivariate**: Khóa cứng hướng giả định để tối đa hóa độ chính xác HSIC. |
+| **Tiền xử lý** | Cơ bản | **Advanced Pipeline**: Tích hợp Quantile Transformation và Isolation Forest để làm sạch dữ liệu. |
+| **Kiến trúc MLP** | Standard MLP | **SOTA Backbone**: Tích hợp Self-Attention, Gated Residual Networks (GRN) và VAE. |
 
-## Kết quả đạt được (My Benchmarks)
+## 🛠 Đặc điểm Kỹ thuật
 
-Tôi đã thực hiện kiểm chứng mô hình trên bộ dữ liệu sinh học thực tế **Sachs (Flow Cytometry)** với các kết quả cụ thể:
+- **Neural Spline Flows (NSF):** Khả năng mô hình hóa các hàm chuyển đổi nhiễu phi tuyến bậc cao, giúp trích xuất phần dư (residuals) sạch hơn cho các phép thử độc lập.
+- **Differentiable DAG Discovery:** Sử dụng thuật toán NOTEARS để ép ma trận trọng số tuân thủ tính chất đồ thị không vòng (Acyclicity), cho phép tìm kiếm DAG đa biến trực tiếp bằng Gradient Descent.
+- **Hybrid Objective Function:** Tối ưu hóa đồng thời sai số dự báo (MSE), tính không vòng (DAG Penalty) và tính độc lập nhân quả (HSIC Penalty).
+- **Latent Mechanism Discovery:** Sử dụng đầu VAE kết hợp Gumbel-Softmax để tự động nhận diện các cơ chế nhân quả tiềm ẩn hoặc biến ẩn trong dữ liệu.
 
-- **Độ chính xác hướng nhân quả (Accuracy): 70.6%** (Xác định đúng hướng cho 12/17 cạnh quan trọng).
-- **Chỉ số SHD (Structural Hamming Distance): 5**.
-- Kết quả này vượt trội đáng kể so với các thuật quy trình truyền thống như PC hay GES trên cùng một tập dữ liệu quan sát.
+## 📊 Kết quả Thực nghiệm (Benchmarks)
 
-## Cài đặt và Sử dụng
+Hiệu suất của hệ thống được kiểm chứng trên bộ dữ liệu sinh học thực tế **Sachs (Flow Cytometry)**, đạt kết quả vượt trội so với các phương pháp truyền thống:
 
-Bạn có thể cài đặt thư viện này trực tiếp từ GitHub của tôi:
+- **Độ chính xác (Accuracy): 70.6%** (Xác định đúng hướng cho 12/17 cạnh nhân quả đã biết).
+- **SHD (Structural Hamming Distance): 5** (Tổng số cạnh bị xác định sai hướng).
+- Hệ thống thể hiện khả năng chống nhiễu mạnh mẽ và độ ổn định cao trên dữ liệu quan sát thực tế.
+
+## 📦 Cài đặt
+
+Cài đặt trực tiếp từ kho lưu trữ GitHub:
 
 ```bash
 pip install git+https://github.com/manhthai1706/CausalFlow.git
 ```
 
-### Cách tôi sử dụng mô hình để phân tích:
+## 📖 Hướng dẫn Sử dụng
 
+### Phân tích hướng nhân quả song biến (Bivariate)
 ```python
-from causalflow import ANMMM_cd_advanced, CausalFlow
+from causalflow import ANMMM_cd_advanced
 import numpy as np
 
-# 1. Phân tích hướng nhân quả giữa 2 protein
+# pair_data: mảng numpy shape [n_samples, 2]
 direction, analyzer = ANMMM_cd_advanced(pair_data, lda=12.0)
+# direction = 1 (X->Y) hoặc -1 (Y->X)
+```
 
-# 2. Học cấu trúc DAG cho toàn bộ 11 biến trong tập Sachs
+### Học cấu trúc DAG đa biến (Multivariate)
+```python
+from causalflow import CausalFlow
+import numpy as np
+
 model = CausalFlow(x_dim=11, n_clusters=3)
-model.fit(data)
+model.fit(data_matrix, epochs=200)
 W_raw, W_binary = model.get_dag_matrix(threshold=0.1)
 ```
 
-## Tham khảo
+## 📚 Tham khảo
 
-- **GPPOM-HSIC (amber0309).** "Gaussian Process POuM with HSIC." [GitHub Repository](https://github.com/amber0309). (Mã nguồn nền tảng cho việc triển khai HSIC và GP).
-- **Zheng, X., et al. (2018).** "DAGs with NO TEARS: Continuous Optimization for Structure Learning." *NeurIPS*. (Thuật toán học đồ thị DAG liên tục).
-- **Durkan, C., et al. (2019).** "Neural Spline Flows." *NeurIPS*. (Mô hình hóa nhiễu phi tuyến phức tạp bằng Spline Flows).
-- **Zhang, K., & Hyvarinen, A. (2009).** "On the Identifiability of the Post-Nonlinear Causal Model." *UAI*. (Cơ sở cho mô hình PNL mà tôi đã tích hợp).
-- **Rahimi, A., & Recht, B. (2007).** "Random Features for Large-Scale Kernel Machines." *NeurIPS*. (Tối ưu hóa tốc độ HSIC thông qua RFF).
-- **Gretton, A., et al. (2007).** "A Kernel Statistical Test of Independence." *NeurIPS*. (Nền tảng của các phép thử độc lập HSIC).
-- **Vaswani, A., et al. (2017).** "Attention Is All You Need." *NeurIPS*. (Cơ chế Self-Attention trong lớp MLP để trọng số hóa đặc trưng).
-- **Jang, E., et al. (2016).** "Categorical Reparameterization with Gumbel-Softmax." *ICLR*. (Cơ chế phân cụm cơ chế nhân quả có thể đạo hàm).
-- **Kingma, D. P., & Welling, M. (2013).** "Auto-Encoding Variational Bayes." *ICLR*. (Kiến trúc VAE để phát hiện cơ cấu tiềm ẩn).
-- **He, K., et al. (2016).** "Deep Residual Learning for Image Recognition." *CVPR*. (Cơ chế Residual Connections trong khối ResBlock).
-- **Ba, J. L., et al. (2016).** "Layer Normalization." *arXiv*. (Kỹ thuật chuẩn hóa lớp để ổn định quá trình huấn luyện).
-- **Hendrycks, D., & Gimpel, K. (2016).** "Gaussian Error Linear Units (GELUs)." *arXiv*. (Hàm kích hoạt GELU trong mô hình MLP).
-- **Lim, B., et al. (2021).** "Temporal Fusion Transformers." *International Journal of Forecasting*. (Cấu trúc Gated Residual Network - GRN cho việc chọn lọc đặc trưng).
-- **Loshchilov, I., & Hutter, F. (2017).** "Decoupled Weight Decay Regularization." *ICLR*. (Thuật toán tối ưu AdamW tôi sử dụng trong Trainer).
-- **Liu, F. T., et al. (2008).** "Isolation Forest." *ICDM*. (Sử dụng để loại bỏ Outliers trong tiền xử lý).
-- **Pedregosa, F., et al. (2011).** "Scikit-learn: Machine Learning in Python." *JMLR*. (Cung cấp QuantileTransformer).
-- **Paszke, A., et al. (2019).** "PyTorch: An Imperative Style, High-Performance Deep Learning Library." *NeurIPS*.
+- **GPPOM-HSIC (amber0309).** [GitHub Repository](https://github.com/amber0309). (Cơ sở thuật toán ban đầu).
+- **Zheng, X., et al. (2018).** "DAGs with NO TEARS." *NeurIPS*.
+- **Durkan, C., et al. (2019).** "Neural Spline Flows." *NeurIPS*.
+- **Zhang, K., & Hyvarinen, A. (2009).** "Identifiability of Post-Nonlinear Causal Model." *UAI*.
+- **Lim, B., et al. (2021).** "Temporal Fusion Transformers (GRN)." *IJF*.
+- **Paszke, A., et al. (2019).** "PyTorch: High-Performance Deep Learning Library." *NeurIPS*.
 
 ## License
 Dự án được phát hành dưới giấy phép MIT License.
