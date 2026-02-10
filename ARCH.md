@@ -144,6 +144,7 @@ graph TD
     
     SCORE1 & SCORE2 --> COMP[Compare Scores]
     COMP --> DECIDE[Final Decision: Min Score Wins]
+```
 
 ---
 
@@ -185,5 +186,4 @@ graph TD
     end
     
     DAG_MAT & BIV_TEST --> OUTPUT[Cấu trúc Nhân quả cuối cùng]
-```
 ```
