@@ -11,4 +11,5 @@ setup(
         "matplotlib>=3.5.0",
         "scipy>=1.7.0"
     ],
+    license="MIT",
 )

@@ -8,7 +8,7 @@ version = "1.0.0"
 description = "An advanced multivariate causal discovery framework using Gaussian Processes and Neural Spline Flows."
 readme = "README.md"
 requires-python = ">=3.8"
-license = { text = "MIT" }
+license = { file = "LICENSE" }
 authors = [
     { name = "Manh Thai", email = "manht@example.com" }
 ]
