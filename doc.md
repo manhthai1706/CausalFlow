@@ -62,3 +62,4 @@ Sử dụng bộ sinh dữ liệu phức tạp (Exponential, Laplace, Sin/Cos ma
 | **TPR (True Positive Rate)** | ~55-60% | ~60-65% | **> 70%** |
 | **FDR (False Discovery Rate)** | Cao do nhiễu | Trung bình | **Thấp (Nhờ lọc Outliers)** |
 | **SHD** | Tùy thuộc tập dữ liệu | Thường > 8 | **~5 (Trên tập Sachs)** |
+
