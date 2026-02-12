@@ -9,17 +9,17 @@ Dựa trên nền tảng của phương pháp ANM-MM, CausalFlow đóng vai trò
 
 ## 🚀 Cải tiến so với Base (ANM-MM / GPPOM-HSIC)
 
-CausalFlow đã nâng cấp nền tảng từ bộ công cụ `GPPOM-HSIC` của amber0309 thành một bộ khung **Deep Learning Engine** mạnh mẽ và hợp nhất:
-
-| Tính năng | Base (amber0309) | **CausalFlow (Ours)** | Rationale |
+| Khía cạnh | Base Project (amber0309) | **CausalFlow (Ours)** | Giá trị hệ thống |
 | :--- | :--- | :--- | :--- |
-| **Kiến trúc** | Hàm rời rạc (Loose scripts) | **Unified Model Class** | Đóng gói toàn bộ workflow vào một Class duy nhất theo phong cách PyTorch/Scikit-learn. |
-| **Neural Backbone** | MLP Cơ bản (Simple MLP) | **Deep ResNet + GRN + Attention** | Tăng khả năng học đặc trưng phi tuyến và tự động loại bỏ biến nhiễu qua Self-Attention. |
-| **Noise Modeling** | Giả định nhiễu đơn giản | **Neural Spline Flows (NSF)** | Sử dụng các hàm Spline có thể đạo hàm để mô hình hóa các phân phối nhiễu phức tạp. |
-| **DAG Learning** | Tìm kiếm tham lam (Bivariate) | **NOTEARS (Multivariate)** | Khám phá cấu trúc đồ thị đa biến thông qua tối ưu hóa liên tục, đảm bảo tính không vòng (Acyclicity). |
-| **Inference API** | Không có sẵn | **High-level Analysis API** | Tích hợp sẵn `predict_direction`, `predict_counterfactual`, `check_stability` ngay trong model. |
-| **Training Flow** | Gọi lệnh thủ công | **Auto-Inference & Auto-Train** | Tự động nhận diện chiều dữ liệu và huấn luyện ngay khi `init` hoặc gọi `__call__`. |
-| **Tiền xử lý** | Cơ bản | **Hybrid Preprocessing** | Kết hợp `QuantileTransformer` (Gaussianizing) và `Isolation Forest` (Outlier Removal). |
+| **Triết lý thiết kế** | Tập hợp các Script nghiên cứu | **Unified Machine Learning Engine** | Chuyển đổi từ công cụ đơn lẻ thành một Framework hoàn chỉnh. |
+| **Kiến trúc mã nguồn** | Phẳng & Phân mảnh | **Phân lớp Chuyên nghiệp (Core/Models/Utils)** | Dễ dàng bảo trì, mở rộng và tích hợp vào các hệ thống khác. |
+| **Mô hình hóa Nhiễu** | Giả định đơn giản | **Neural Spline Flows (NSF)** | Khả năng học các phân phối nhiễu phi tuyến phức tạp nhất. |
+| **Cấu trúc Đồ thị** | Giới hạn ở song biến (Bivariate) | **NOTEARS (Multivariate DAG)** | Khám phá cấu trúc của hàng chục biến cùng lúc một cách đồng bộ. |
+| **Giao diện lập trình** | Hàm rời rạc, gọi thủ công | **Sklearn-compatible OO API** | Thân thiện với lập trình viên: `model.fit()`, `model.predict()`. |
+| **Xử lý dữ liệu** | Tiền xử lý tối giản | **SOTA Hybrid Pipeline (IsoForest + QT)** | Loại bỏ nhiễu sinh học, tăng tính hội tụ cho mô hình sâu. |
+| **Phân tích nâng cao** | Không hỗ trợ | **Counterfactual & Stability Suite** | Cho phép mô phỏng kịch bản giả tưởng "What-if" và thẩm định kết quả. |
+| **Độ tin cậy** | Chỉ test trên dữ liệu mô phỏng | **Real-world Sachs Benchmark (70.6%)** | Được kiểm chứng trên bộ dữ liệu protein thực tế khắt khe nhất. |
+| **Tài liệu & Đặc tả** | README ngắn gọn | **Hệ thống ARCH.md & Đặc tả chi tiết** | Minh bạch về thuật toán và cấu trúc sơ đồ hoạt động. |
 
 ## Đặc điểm Kỹ thuật
 
