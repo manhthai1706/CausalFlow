@@ -238,66 +238,40 @@ sequenceDiagram
 
 ## 8. `causalflow.py` — CausalFlow class API
 
-### `__init__`
-
 ```mermaid
 graph TD
     A["CausalFlow(x_dim, lda, data)"] --> B{data?}
     B -- có --> C["infer x_dim → tạo Core → fit()"]
-    B -- không --> D["Core = None, chờ fit sau"]
+    B -- không --> D["Core = None"]
+    C --> E["Model đã train"]
+    D --> F["fit(X, Y, epochs, lr)"]
+    F --> G{Core đã tạo?}
+    G -- chưa --> H["Tạo Core từ X.shape"]
+    H --> I["Trainer.train X"]
+    G -- rồi --> I
+    I --> E
+
+    E --> J["predict_direction(data)"]
+    J --> K{data?}
+    K -- có --> L["ANMMM_cd: train 2 model, so HSIC"]
+    K -- không --> M["So W_dag 0,1 vs W_dag 1,0"]
+
+    E --> N["get_dag_matrix(threshold)"]
+    N --> O["W = W_dag.numpy"]
+    O --> P["W_bin = abs W > thr"]
+
+    E --> Q["get_residuals(X)"]
+    Q --> R["MLP → z → phi → y_pred"]
+    R --> S["res = pnl_transform X - y_pred"]
+
+    E --> T["check_stability(X, n_splits)"]
+    T --> U["Chia X, tính loss mỗi phần"]
+    U --> V["score = std / mean"]
+
+    E --> W["predict_counterfactual(x_orig, y_orig, x_new)"]
+    W --> X["pred_orig = GP x_orig"]
+    X --> Y["pred_new = GP x_new"]
+    Y --> Z["y_cf = y - pred_orig + pred_new"]
 ```
 
-### `fit()`
-
-```mermaid
-graph TD
-    A["fit(X, Y, epochs, lr)"] --> B{Core đã tạo?}
-    B -- chưa --> C["Tạo Core từ X.shape"]
-    C --> D["Trainer.train(X)"]
-    B -- rồi --> D
-```
-
-### `predict_direction()`
-
-```mermaid
-graph TD
-    A["predict_direction(data)"] --> B{data?}
-    B -- có --> C["Gọi ANMMM_cd(data, lda)"]
-    B -- không --> D["So W_dag: W 0,1 vs W 1,0"]
-```
-
-### `get_dag_matrix()`
-
-```mermaid
-graph TD
-    A["threshold = 0.1"] --> B["W = W_dag.detach.numpy"]
-    B --> C["W_bin = abs W > threshold"]
-```
-
-### `get_residuals()`
-
-```mermaid
-graph TD
-    A["X"] --> B["MLP(X) → z_soft"]
-    B --> C["phi = RFF_z * RFF_x → y_pred"]
-    C --> D["res = pnl_transform(X) - y_pred"]
-```
-
-### `check_stability()`
-
-```mermaid
-graph TD
-    A["X, n_splits=3"] --> B["Chia X thành 3 phần"]
-    B --> C["Tính loss trên mỗi phần"]
-    C --> D["score = std losses / mean losses"]
-```
-
-### `predict_counterfactual()`
-
-```mermaid
-graph TD
-    A["x_orig, y_orig, x_new"] --> B["pred_orig = GP_head(x_orig, y_orig)"]
-    B --> C["pred_new = GP_head(x_new, y_orig)"]
-    C --> D["y_cf = y_orig - pred_orig + pred_new"]
-```
 
