@@ -1,189 +1,85 @@
-# CausalFlow Architecture
+# CausalFlow: Unified Architecture Details
 
-Tài liệu này cung cấp sơ đồ hoạt động chi tiết cho từng thành phần trong mã nguồn của framework CausalFlow.
-
----
-
-## 📂 Thư mục `causalflow/core/` (Nền tảng thuật toán)
-
-### 1. `mlp.py` - Ultimate Deep Learning Backbone
-Đây là tệp phức tạp nhất, chịu trách nhiệm trích xuất thực thể và mô hình hóa nhiễu.
-
-```mermaid
-graph TD
-    IN[Input X] --> ATT[Attention Layer: Feature Selection]
-    ATT --> GRN[Gated Residual Network: GRN]
-    GRN --> RB[ResBlocks: Residual Learning]
-    
-    subgraph Multi-Head_Outputs
-        RB --> VAE[VAE Head: mu, log_var for Mechanism Z]
-        RB --> NSF[Monotonic Spline: Noise Transformation h_y]
-        RB --> REG[Regressor: Probabilistic Output mu_y, var_y]
-    end
-    
-    VAE --> Z[Softmax Z clusters]
-    NSF --> HY[Y Transformation]
-```
-
-### 2. `gppom_hsic.py` - Core Engine & DAG Learning
-Điều phối việc học đồ thị nhân quả và kết hợp các hàm mất mát.
-
-```mermaid
-graph TD
-    B[Batch Data] --> MLP[Call: mlp.py for Latents]
-    MLP --> Z[Mechanism Z]
-    
-    subgraph DAG_Optimization
-        W[W_dag Matrix] --> PEN[Acyclicity Penalty: h_W]
-        W --> MASK[Structural Masking]
-    end
-    
-    subgraph Prediction_Flow
-        B & MASK --> GP[Random Fourier Features GP]
-        GP --> PRED[Y Prediction]
-    end
-    
-    PRED --> MSE[Loss: Regression]
-    Z & B --> HSIC1[Loss: FastHSIC Clustering]
-    PRED & B --> HSIC2[Loss: Adaptive HSIC PNL]
-    
-    MSE & PEN & HSIC1 & HSIC2 --> TOTAL[Total Loss & Backward]
-```
-
-### 3. `hsic.py` - Statistical Independence Testing
-Triển khai các phép thử thống kê để xác nhận quan hệ nhân quả.
-
-```mermaid
-graph LR
-    subgraph hsic_gam
-        A[Data X, Y] --> K[Compute Kernels K, L]
-        K --> H[Trace Calculation]
-        H --> GAM[Gamma Approximation]
-        GAM --> P[p-value / Stat]
-    end
-    
-    subgraph hsic_perm
-        A1[Data] --> K1[Kernels]
-        K1 --> SHUFFLE[Permutation/Shuffle]
-        SHUFFLE --> DIST[Null Distribution]
-    end
-```
-
-### 4. `kernels.py` - Differentiable Kernel Library
-Sơ đồ phân cấp các hàm nhân có thể đạo hàm.
-
-```mermaid
-graph TD
-    K[Base Kernel] --> RBF[RBF / Gaussian]
-    K --> MAT[Matern 3/2 & 5/2]
-    K --> RQ[Rational Quadratic]
-    K --> LIN[Linear / Poly]
-    
-    subgraph Optimization
-        PARAM[log_alpha, log_gamma] --> GRAD[Learnable via SGD]
-    end
-```
+Tài liệu này cung cấp sơ đồ hoạt động chi tiết của mô hình hợp nhất CausalFlow, từ lớp nhân (Core) đến các giao diện ứng dụng cấp cao.
 
 ---
 
-## 📂 Thư mục `causalflow/models/` (Giao diện & Ứng dụng)
+## 🏗 Kiến trúc Hệ thống Hợp nhất (Unified System)
 
-### 5. `causalflow.py` - Sklearn-style Wrapper
-Giao diện chính cho người dùng cuối.
+CausalFlow được thiết kế như một thực thể Deep Learning duy nhất, nơi việc học đặc trưng và truy vấn nhân quả diễn ra đồng thời.
 
 ```mermaid
 graph TD
-    START[CausalFlow Object] --> INIT[Init Dimensions & Device]
-    INIT --> FIT[Method: fit]
-    
-    subgraph FIT_Logic
-        FIT --> BIV[Check: Bivariate X, Y?]
-        FIT --> MULTI[Check: Multivariate X?]
-        BIV & MULTI --> TRAIN[Create: CausalFlowTrainer]
+    subgraph Data_Pipeline [Luồng dữ liệu]
+        RAW[Dữ liệu thô] --> QT[Quantile Transform]
+        QT --> IF[Isolation Forest]
     end
-    
-    TRAIN --> RESULT[Update History & Weights]
-    RESULT --> DAG[Method: get_dag_matrix]
-```
 
-### 6. `trainer.py` - Training Orchestrator
-Quản lý vòng lặp huấn luyện và lịch trình (scheduling).
-
-```mermaid
-graph TD
-    LOOP[For Epoch in Epochs] --> TEMP[Adjust Temperature: Gumbel-Softmax]
-    TEMP --> BATCH[For Batch in DataLoader]
-    
-    subgraph Batch_Processing
-        BATCH --> ZERO[optimizer.zero_grad]
-        ZERO --> FORWARD[model.forward]
-        FORWARD --> BACK[loss.backward]
-        BACK --> STEP[optimizer.step]
-    end
-    
-    STEP --> LOG[Logging: Loss & HSIC Trend]
-```
-
-### 7. `analysis.py` - Causal Direction Discovery
-Lô-gic phân tích nhân quả nâng cao (SOTA 70.6%).
-
-```mermaid
-graph TD
-    DATA[Raw Data Pair] --> PRE[Standardize / Quantile Transform]
-    PRE --> CLEAN[Isolation Forest: Remove Outliers]
-    
-    subgraph Hypothesis_Testing
-        CLEAN --> H1[Test Hypothesis: X -> Y]
-        H1 --> LOCK1[Lock W_dag: Force Direction]
-        LOCK1 --> SCORE1[Compute HSIC Stability Score 1]
+    subgraph Unified_Model [CausalFlow Model Instance]
+        IF --> Backbone[Deep ResNet Backbone]
+        Backbone --> Mechanisms[VAE + Spline Flows]
+        Mechanisms --> Optimization[NOTEARS DAG Learning]
         
-        CLEAN --> H2[Test Hypothesis: Y -> X]
-        H2 --> LOCK2[Lock W_dag: Force Direction]
-        LOCK2 --> SCORE2[Compute HSIC Stability Score 2]
-    end
-    
-    SCORE1 & SCORE2 --> COMP[Compare Scores]
-    COMP --> DECIDE[Final Decision: Min Score Wins]
-```
-
----
-
-## 8. Luồng hoạt động tổng thể (Overall System Workflow)
-
-Sơ đồ dưới đây mô tả hành trình của dữ liệu từ khi bắt đầu cho đến khi trích xuất được tri thức nhân quả:
-
-```mermaid
-graph TD
-    %% Input Stage
-    DATA[Dữ liệu quan sát] --> PRE[Tiền xử lý: Quantile + Isolation Forest]
-    
-    %% Model Initialization
-    PRE --> INIT[Khởi tạo mô hình CausalFlow]
-    
-    %% Training Loop
-    subgraph Training_Phase [Giai đoạn Huấn luyện]
-        INIT --> FORWARD[Forward Pass: MLP Backbone]
-        FORWARD --> LATENT[VAE: Latent Mechanism Discovery]
-        LATENT --> GP[Gaussian Process Prediction]
-        GP --> REG[Tính MSE Loss]
-        
-        subgraph Constraints [Ràng buộc Nhân quả]
-            W[W_dag Matrix] --> NT[NOTEARS Acyclicity Penalty]
-            GP --> RES[Trích xuất Residuals]
-            RES --> HSIC[HSIC Independence Penalty]
+        subgraph API [Integrated Application Interface]
+            Optimization --> CD[predict_direction]
+            Optimization --> CF[predict_counterfactual]
+            Optimization --> STAB[check_stability]
         end
-        
-        REG & NT & HSIC --> OPT[AdamW Optimizer Update]
-        OPT -->|Lặp lại| FORWARD
     end
-    
-    %% Inference Phase
-    Training_Phase --> INF[Giai đoạn Suy diễn / Trích xuất]
-    
-    subgraph Analysis_Phase [Phân tích & Kết luận]
-        INF --> DAG_MAT[Lấy ma trận DAG từ W_dag]
-        INF --> BIV_TEST[Kiểm tra hướng song biến Fixed-Structure]
-    end
-    
-    DAG_MAT & BIV_TEST --> OUTPUT[Cấu trúc Nhân quả cuối cùng]
+
+    API --> Insight[Tri thức Nhân quả]
 ```
+
+---
+
+## 📂 Chi tiết thành phần Core
+
+### 1. `mlp.py` - Neural Backbone
+Chịu trách nhiệm trích xuất thực thể và mô hình hóa nhiễu thông qua các lớp mạng sâu.
+- **Attention Layer**: Tập trung vào các biến quan trọng.
+- **ResBlocks & GRN**: Đảm bảo dòng chảy thông tin và kiểm soát cổng (gating).
+- **Multi-Head**: Xuất ra các tham số cho VAE (Mechanism Z) và Spline Flows (Noise H).
+
+### 2. `gppom_hsic.py` - Engine Tối ưu hóa
+Điều phối việc kết hợp giữa mạng nơ-ron và các ràng buộc toán học.
+- **HSIC Penalty**: Ép phần dư và nguyên nhân phải độc lập.
+- **NOTEARS Penalty**: Ép ma trận trọng số tuân thủ cấu trúc DAG (không vòng).
+
+---
+
+## 📂 Giao diện Mô hình (`causalflow.py`)
+
+Đây là lớp bọc (Wrapper) hợp nhất, cung cấp API đơn giản cho người dùng:
+
+- **`fit()`**: Tự động nhận diện chiều dữ liệu và điều phối `CausalFlowTrainer`.
+- **`predict_direction()`**: Thực hiện quy trình kiểm định giả thuyết (Hypothesis Testing) tự động để xác định hướng nhân quả song biến với độ chính xác cao nhất (Sachs: 70.6%).
+- **`predict_counterfactual()`**: Sử dụng cơ chế đã học để dự báo các kịch bản can thiệp (What-if analysis).
+- **`check_stability()`**: Đánh giá độ tin cậy của mô hình thông qua tính bất biến trên các phân đoạn dữ liệu.
+
+---
+
+## 🔄 Luồng hoạt động Tổng thể
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Model as CausalFlow
+    participant Core as GPPOM Engine
+    participant Trainer
+
+    User->>Model: Initialize(data)
+    Model->>Core: Auto-configure dimensions
+    Model->>Trainer: Start Training
+    Trainer-->>Model: Return weights & DAG
+    
+    User->>Model: predict_direction(pair)
+    Model->>Core: Run hypothesis A (X->Y)
+    Model->>Core: Run hypothesis B (Y->X)
+    Model-->>User: Return best direction (Accuracy: 70.6%)
+    
+    User->>Model: predict_counterfactual(x_new)
+    Model->>Core: Apply learned mechanism
+    Model-->>User: Return Y_counterfactual
+```
+
+Tài liệu này khẳng định tính gọn gàng và mạnh mẽ của kiến trúc mới, nơi mọi sự phức tạp thuật toán được ẩn đi sau một giao diện model hiện đại.
