@@ -1,110 +1,109 @@
-# CausalFlow: Kiến trúc Mạng Nơ-ron Sâu Hợp nhất trong Khám phá Cấu trúc Nhân quả
+# CausalFlow
 
-[![Architecture](https://img.shields.io/badge/Architecture-Detailed_Diagrams-blueviolet?style=flat-square)](ARCH.md)
+[![Architecture](https://img.shields.io/badge/Kiến_trúc-Chi_tiết-blueviolet?style=flat-square)](ARCH.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=flat-square)](LICENSE)
 
----
+## Tổng quan
 
-## 📝 Tổng quan (Abstract)
+CausalFlow là một thư viện Python dùng để xác định mối quan hệ nhân quả từ dữ liệu quan sát. Dự án được phát triển dựa trên framework ANM-MM (Additive Noise Model - Mixture Model) của [amber0309](https://github.com/amber0309/ANM-MM), với các thay đổi chính ở phần backbone mạng nơ-ron và cách tổ chức mã nguồn.
 
-Dự án **CausalFlow** đề xuất một giải pháp học sâu (Deep Learning) tiên tiến nhằm giải quyết bài toán khám phá cấu trúc nhân quả (Causal Discovery) từ dữ liệu quan sát phi tuyến. Hệ thống được thiết kế dựa trên triết lý "Mô hình hợp nhất" (Unified Model), tích hợp đồng thời việc học đặc trưng thông qua các mạng nơ-ron sâu và tối ưu hóa đồ thị có hướng không vòng (DAG) dựa trên các ràng buộc toán học liên tục. Kết quả thực nghiệm trên bộ dữ liệu protein thực tế cho thấy mô hình đạt độ chính xác cao trong việc xác định hướng nhân quả, đồng thời cung cấp khả năng phân tích giả tưởng mạnh mẽ cho các bài toán can thiệp dữ liệu.
+Mục tiêu của dự án là gói gọn toàn bộ quy trình khám phá nhân quả — từ tiền xử lý dữ liệu, huấn luyện mô hình đến trích xuất đồ thị — vào trong một class `CausalFlow` duy nhất, thay vì phải gọi nhiều hàm rời rạc như bản gốc.
 
-## 1. Giới thiệu (Introduction)
+## Giới thiệu
 
-Trong bối cảnh khoa học dữ liệu hiện đại, việc xác định mối quan hệ nhân quả (Causality) thay vì chỉ dừng lại ở mối liên quan (Correlation) đóng vai trò sống còn trong các lĩnh vực như y sinh, kinh tế và trí tuệ nhân tạo giải thích được. Các phương pháp truyền thống thường gặp khó khăn khi đối mặt với dữ liệu có tính chất phi tuyến bậc cao và phân phối nhiễu phức tạp.
+Bài toán khám phá nhân quả (Causal Discovery) đặt câu hỏi: cho hai biến X và Y có tương quan, liệu X gây ra Y, Y gây ra X, hay cả hai đều do một biến ẩn thứ ba chi phối? Đây là vấn đề cơ bản trong nhiều lĩnh vực như y sinh, kinh tế và khoa học xã hội.
 
-**CausalFlow** ra đời với mục tiêu chuyển đổi các phương pháp nghiên cứu rời rạc (tình trạng chung của các thuật toán tiền nhiệm như GPPOM-HSIC) thành một **Engine nhân quả** hoàn chỉnh. Bằng cách kết hợp giữa mạng nơ-ron Spline Flow và tối ưu hóa NOTEARS, CausalFlow không chỉ tìm thấy cấu trúc đồ thị mà còn học được cơ chế sinh dữ liệu (Data Generating Process), cho phép thực hiện các phép thử "What-if" đầy tiềm năng.
+CausalFlow tiếp cận bài toán này theo hướng mô hình nhiễu cộng (Additive Noise Model): nếu Y = f(X) + N với N độc lập với X, thì X là nguyên nhân của Y. Mô hình sử dụng mạng nơ-ron để xấp xỉ hàm f, sau đó kiểm tra tính độc lập giữa phần dư và biến đầu vào bằng HSIC (Hilbert-Schmidt Independence Criterion).
 
----
+## Các thành phần kỹ thuật
 
-## 2. Đặc tả Kỹ thuật và Công nghệ SOTA
+CausalFlow sử dụng các thành phần sau:
 
-Kiến trúc CausalFlow được xây dựng từ các thành phần công nghệ hiện đại nhất (State-of-the-art):
+### Backbone mạng nơ-ron
+- **ResNet blocks**: Các khối residual giúp huấn luyện mạng sâu hơn mà không bị vanishing gradient.
+- **Gated Residual Network (GRN)**: Cơ chế gating để kiểm soát luồng thông tin, lấy ý tưởng từ Temporal Fusion Transformers.
+- **Self-Attention**: Lớp attention đơn giản để đánh trọng số các biến đầu vào.
 
-*   **Deep Neural Backbone (ResNet + GRN + Attention):** Hệ thống trích xuất đặc trưng sử dụng các khối ResNet kết hợp với Gated Residual Networks (GRN) cho phép mô hình tự động chọn lọc các biến đầu vào có ảnh hưởng nhân quả, đồng thời bỏ qua các biến gây nhiễu.
-*   **Neural Spline Flows (NSF):** Khác với các giả định nhiễu đơn giản, CausalFlow sử dụng các hàm Spline đơn điệu để mô hình hóa hàm mật độ xác suất của nhiễu. Điều này giúp mô hình "làm sạch" dữ liệu và tách biệt nguyên nhân - kết quả một cách chính xác hơn trong môi trường phi tuyến.
-*   **Differentiable DAG Discovery (NOTEARS):** Chuyển đổi bài toán tìm kiếm đồ thị rời rạc thành bài toán tối ưu hóa liên tục. Ràng buộc toán học đảm bảo đồ thị đầu ra luôn đạt tính không vòng (Acyclicity).
-*   **Hilbert-Schmidt Independence Criterion (HSIC):** Được sử dụng như một hàm phạt (Penalty function) trong quá trình huấn luyện để cưỡng bức tính độc lập thống kê giữa phần dư (residuals) và biến nguyên nhân, đây là điều kiện tiên quyết trong lý thuyết nhân quả ANM.
+### Mô hình hóa nhiễu
+- **Neural Spline Flows (NSF)**: Dùng các hàm spline đơn điệu để biến đổi phân phối nhiễu, thay vì giả định nhiễu tuân theo phân phối cố định (ví dụ Gaussian).
+- **VAE head**: Mã hóa biến tiềm ẩn (latent variable) đại diện cho các cơ chế nhân quả khác nhau trong mô hình hỗn hợp.
 
----
+### Tối ưu hóa cấu trúc đồ thị
+- **NOTEARS**: Phương pháp tối ưu hóa liên tục để học ma trận kề W của đồ thị nhân quả, với ràng buộc đại số đảm bảo đồ thị không có vòng.
+- **HSIC penalty**: Hàm phạt dựa trên HSIC để ép phần dư và biến nguyên nhân độc lập về mặt thống kê.
 
-## 3. Sự tiến hóa và Cải tiến Hệ thống
+### Tiền xử lý dữ liệu
+- **QuantileTransformer** (scikit-learn): Chuẩn hóa phân phối dữ liệu về dạng Gaussian.
+- **Isolation Forest** (scikit-learn): Loại bỏ các điểm ngoại lai trước khi đưa vào mô hình.
 
-Bảng dưới đây tóm tắt sự lột xác của dự án từ phiên bản nghiên cứu ban đầu (`amber0309`) sang Framework `CausalFlow`:
+## So sánh với dự án gốc (amber0309)
 
-| Khía cạnh | Dự án Base (amber0309) | **CausalFlow (Ours)** | Giá trị khoa học |
-| :--- | :--- | :--- | :--- |
-| **Kiến trúc mã** | Script rời rạc, cấu trúc phẳng | **Cấu trúc phân lớp (Modularized)** | Tăng tính tái sử dụng và khả năng bảo trì. |
-| **Mô hình hóa** | MLP đơn giản, nhiễu Gauss | **Deep ResNet & Spline Flows** | Khả năng biểu diễn các cơ chế phi tuyến cực kỳ phức tạp. |
-| **Tìm kiếm đồ thị** | Greedy Search / Bivariate | **Multivariate Optimization** | Tìm kiếm cấu trúc của toàn bộ hệ thống biến đồng thời. |
-| **API Giao tiếp** | Gọi hàm thủ công | **Unified Model Class API** | Đồng nhất hóa luồng huấn luyện và suy diễn (Inference). |
-| **Ứng dụng** | Chỉ tìm hướng | **Counterfactual & Stability** | Khả năng thẩm định độ bền vững và mô phỏng can thiệp. |
-| **Tiền xử lý** | Cơ bản | **Hybrid Preprocessing Pipeline** | (IsoForest + Quantile) Tối ưu hóa dữ liệu đầu vào. |
+| Thành phần | amber0309 (Base) | CausalFlow |
+| :--- | :--- | :--- |
+| Cấu trúc mã | Các script và hàm riêng lẻ | Tổ chức theo package (core/models/utils) |
+| Backbone | MLP tiêu chuẩn | ResNet + GRN + Attention |
+| Mô hình nhiễu | Phân phối cố định | Neural Spline Flows |
+| Phạm vi | Chủ yếu song biến | Hỗ trợ đa biến qua NOTEARS |
+| Giao diện | Gọi hàm trực tiếp | Class API (`model.fit()`, `model.predict_direction()`) |
+| Phân tích thêm | Không | Counterfactual, stability check |
+| Tiền xử lý | Thủ công | Tích hợp IsolationForest + QuantileTransformer |
 
----
+## Cài đặt
 
-## 4. Hướng dẫn Cài đặt và Sử dụng
-
-### Cài đặt
 ```bash
 pip install git+https://github.com/manhthai1706/CausalFlow.git
 ```
 
-### Sử dụng API Hợp nhất
-Dự án được thiết kế để sử dụng đơn giản như các thư viện ML hiện đại:
+## Sử dụng
 
-**1. Xác định hướng nhân quả cho cặp biến:**
+### Xác định hướng nhân quả (song biến)
 ```python
 from causalflow import CausalFlow
+
 model = CausalFlow(lda=12.0)
-direction = model.predict_direction(data) # Trả về hướng tối ưu
+direction = model.predict_direction(data)  # 1: X->Y, -1: Y->X
 ```
 
-**2. Huấn luyện đa biến và lấy ma trận DAG:**
+### Huấn luyện đa biến
 ```python
-model = CausalFlow(data=X_matrix) # Tự động nhận diện và huấn luyện
+model = CausalFlow(data=X, epochs=200)
 W_raw, W_binary = model.get_dag_matrix()
 ```
 
----
+## Kết quả Thực nghiệm
 
-## 5. Kết quả Thực nghiệm và Thảo luận (Results)
+Đánh giá trên tập dữ liệu Sachs (Protein Signaling Network), gồm 11 biến protein và 17 cạnh nhân quả đã biết:
 
-Hiệu suất của CausalFlow được kiểm chứng khắt khe trên bộ dữ liệu thực tế **Sachs (Protein Signaling Network)**:
+- **Accuracy**: 70.6% (12/17 cạnh đúng hướng).
+- **SHD**: 5.
 
-*   **Độ chính xác xác định hướng (Accuracy): 70.6%** (Xác định đúng 12/17 cạnh nhân quả thực tế).
-*   **SHD (Structural Hamming Distance): 5** (Mức sai số cấu trúc rất thấp so với các phương pháp cùng loại).
-*   **Độ ổn định:** Mô hình duy trì hiệu năng cao nhờ khả năng lọc nhiễu sinh học bằng Isolation Forest.
+### So sánh hiệu năng
 
-### Bảng so sánh hiệu năng
+| Phương pháp | Accuracy (Sachs) | SHD |
+| :--- | :--- | :--- |
+| PC Algorithm | ~50-55% | Cao |
+| NOTEARS (gốc) | ~60% | > 8 |
+| CausalFlow | 70.6% | 5 |
 
-| Thuật toán | Cơ chế Phi tuyến | Độ chính xác (Sachs) | SHD | Tính ổn định |
-| :--- | :--- | :--- | :--- | :--- |
-| **PC Algorithm** | Yếu | ~50-55% | Cao | Thấp |
-| **NOTEARS (Original)** | Trung bình | ~60% | > 8 | Trung bình |
-| **CausalFlow (Ours)** | **Rất tốt (NSF)** | **70.6%** | **5** | **Cao** |
+## Tham khảo
 
----
-
-## 6. Tham khảo (References)
-
-1.  **ANM-MM (amber0309).** [GitHub Repository](https://github.com/amber0309/ANM-MM). (Cơ sở thuật toán ban đầu).
-2.  **Zheng, X., et al. (2018).** "DAGs with NO TEARS: Continuous Optimization for Structure Learning." *NeurIPS*.
-3.  **Durkan, C., et al. (2019).** "Neural Spline Flows." *NeurIPS*.
-4.  **Zhang, K., & Hyvarinen, A. (2009).** "On the Identifiability of the Post-Nonlinear Causal Model." *UAI*.
-5.  **Rahimi, A., & Recht, B. (2007).** "Random Features for Large-Scale Kernel Machines." *NeurIPS*.
-6.  **Gretton, A., et al. (2007).** "A Kernel Statistical Test of Independence." *NeurIPS*.
-7.  **Vaswani, A., et al. (2017).** "Attention Is All You Need." *NeurIPS*.
-8.  **Jang, E., et al. (2016).** "Categorical Reparameterization with Gumbel-Softmax." *ICLR*.
-9.  **Kingma, D. P., & Welling, M. (2013).** "Auto-Encoding Variational Bayes." *ICLR*.
+1. **ANM-MM (amber0309).** [GitHub](https://github.com/amber0309/ANM-MM).
+2. **Zheng, X., et al. (2018).** "DAGs with NO TEARS." *NeurIPS*.
+3. **Durkan, C., et al. (2019).** "Neural Spline Flows." *NeurIPS*.
+4. **Zhang, K., & Hyvarinen, A. (2009).** "On the Identifiability of the Post-Nonlinear Causal Model." *UAI*.
+5. **Rahimi, A., & Recht, B. (2007).** "Random Features for Large-Scale Kernel Machines." *NeurIPS*.
+6. **Gretton, A., et al. (2007).** "A Kernel Statistical Test of Independence." *NeurIPS*.
+7. **Vaswani, A., et al. (2017).** "Attention Is All You Need." *NeurIPS*.
+8. **Jang, E., et al. (2016).** "Categorical Reparameterization with Gumbel-Softmax." *ICLR*.
+9. **Kingma, D. P., & Welling, M. (2013).** "Auto-Encoding Variational Bayes." *ICLR*.
 10. **He, K., et al. (2016).** "Deep Residual Learning for Image Recognition." *CVPR*.
 11. **Ba, J. L., et al. (2016).** "Layer Normalization." *arXiv*.
 12. **Hendrycks, D., & Gimpel, K. (2016).** "Gaussian Error Linear Units (GELUs)." *arXiv*.
-13. **Lim, B., et al. (2021).** "Temporal Fusion Transformers (GRN)." *IJF*.
+13. **Lim, B., et al. (2021).** "Temporal Fusion Transformers." *IJF*.
 14. **Loshchilov, I., & Hutter, F. (2017).** "Decoupled Weight Decay Regularization." *ICLR*.
 15. **Liu, F. T., et al. (2008).** "Isolation Forest." *ICDM*.
-16. **Pedregosa, F., et al. (2011).** "Scikit-learn: Machine Learning in Python." *JMLR*.
-17. **Paszke, A., et al. (2019).** "PyTorch: An Imperative Style, High-Performance Deep Learning Library." *NeurIPS*.
+16. **Pedregosa, F., et al. (2011).** "Scikit-learn." *JMLR*.
+17. **Paszke, A., et al. (2019).** "PyTorch." *NeurIPS*.
 
-## Giấy phép (License)
-Dự án được phát hành dưới giấy phép MIT License.
+## License
+MIT License.
