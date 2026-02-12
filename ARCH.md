@@ -33,37 +33,36 @@ graph TD
 
 ```mermaid
 graph TD
-    A["Input x: batch, input_dim"] --> B["Gate = Sigmoid(Linear→GELU→Linear)"]
-    B --> C["gated_x = x * gate(x)"]
+    A["Input x: batch, input_dim"] --> B["Gate = Sigmoid Linear→GELU→Linear"]
+    B --> C["gated_x = x * gate x"]
     C --> D[ResBlock 1]
     D --> E[ResBlock 2]
     E --> F[ResBlock 3]
     F --> G[feat]
 
+    D -.- RB
+
+    subgraph RB ["Chi tiết mỗi ResBlock"]
+        RB1["x"] --> RB2["Linear→LN→GELU→Drop→Linear→LN"]
+        RB1 --> RB3["+ residual"]
+        RB2 --> RB3
+        RB3 --> RB4["GELU x + block x"]
+    end
+
     G --> H["z_mean = Linear → n_clusters"]
     G --> I["z_logvar = Linear → n_clusters"]
-    H --> J["z = reparameterize(mu, logvar)"]
+    H --> J["z = reparameterize mu, logvar"]
     I --> J
-    J --> K["z_soft = softmax(z / temp)"]
+    J --> K["z_soft = softmax z / temp"]
 
     G --> L["regressor = Linear → output_dim*2"]
     L --> M["chunk → mu, log_var"]
 
-    M --> N["MonotonicSplineLayer(randn_like mu)"]
+    M --> N["MonotonicSplineLayer randn_like mu"]
     N --> O[noise_complex]
 
-    M --> P["InvertibleLayer: softplus(w)*x + b"]
+    M --> P["InvertibleLayer: softplus w * x + b"]
     P --> Q[y_trans]
-```
-
-### Chi tiết ResBlock
-
-```mermaid
-graph TD
-    A[x] --> B["Linear → LayerNorm → GELU → Dropout → Linear → LayerNorm"]
-    A --> C["residual connection"]
-    B --> C
-    C --> D["output = GELU(x + block x)"]
 ```
 
 ---
